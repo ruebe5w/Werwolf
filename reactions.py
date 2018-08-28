@@ -13,12 +13,17 @@ def on_ready():
     print(client.user.id)
     print('------')
     user_load()
+    roles_load()
 
 
 @client.event
 @asyncio.coroutine
 def on_message(message):
     # print(message.content)
+    if message.content.startswith('!roles'):
+        yield from roles(message)
+    if message.content.startswith('!addrole'):
+        yield from add_role(message)
     if message.content.startswith('!p'):
         yield from new_poll(message)
     if message.content.startswith('!r'):
@@ -43,6 +48,33 @@ def user_load():  # Load userdata
         print("Keine Benutzerdatenbank gefunden. Benutzerdatenbank wird erstellt.")
         with open("user.json", "w") as file:
             gl_users = {}
+
+
+def roles_load():
+    global gl_roles
+    try:
+        with open("roles.json", "r") as file:
+            gl_roles = json.loads(file.read())
+    except:
+        print("Keine Rollendatenbank gefunden. Rollendatenbank wird erstellt.")
+        with open("roles.json", "w") as file:
+            gl_roles = {}
+
+
+@asyncio.coroutine
+def roles(message):
+    global gl_users
+    arguments = message.content.split()
+    if arguments[1] == '-u':
+
+
+@asyncio.coroutine
+def add_role(message):
+    global gl_roles
+    arguments = message.content.split()
+    gl_roles[arguments[1]] = [{}]
+    dump_array("roles.json", gl_roles)
+    yield from send_message(message.channel, "Die Rolle \"" + arguments[1] + "\" wurde hinzugefügt")
 
 
 @asyncio.coroutine
