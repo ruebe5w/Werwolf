@@ -20,23 +20,26 @@ def on_ready():
 @asyncio.coroutine
 def on_message(message):
     # print(message.content)
-    if message.content.startswith('!roles'):
-        yield from roles(message)
-    if message.content.startswith('!addrole'):
-        yield from add_role(message)
-    if message.content.startswith('!p'):
-        yield from new_poll(message)
-    if message.content.startswith('!r'):
-        contains_emoji = False
-        for i in message.content:
-            print(hex(ord(i)))
-            if 0x1F600 <= int(hex(ord(i)), 16) <= 0x1F64F:
-                contains_emoji = True
-                yield from add_reaction(message, i)
-                yield from register(message.author, message.channel, i)
-        if not contains_emoji:
-            yield from send_message(message.channel,
-                                    message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
+    if message.author.server_permissions.administrator:
+
+        if message.content.startswith('!roles'):
+            yield from roles(message, True)
+        if message.content.startswith('!addrole'):
+            yield from add_role(message)
+        if message.content.startswith('!p'):
+            yield from new_poll(message)
+    else:
+        if message.content.startswith('!r'):
+            contains_emoji = False
+            for i in message.content:
+                print(hex(ord(i)))
+                if 0x1F600 <= int(hex(ord(i)), 16) <= 0x1F64F:
+                    contains_emoji = True
+                    yield from add_reaction(message, i)
+                    yield from register(message.author, message.channel, i)
+            if not contains_emoji:
+                yield from send_message(message.channel,
+                                        message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
 
 
 def user_load():  # Load userdata
@@ -62,17 +65,29 @@ def roles_load():
 
 
 @asyncio.coroutine
-def roles(message):
+def roles(message, admin):
     global gl_users
+    global gl_roles
     arguments = message.content.split()
-    if arguments[1] == '-u':
+    bol = False
+    if len(arguments) > 1:
+        if admin and arguments[1] == '-u':
+            bol = True
+    content = "**Rollen im Spiel:**\n\n"
+    for role in gl_roles:
+        content += "*" + role + "* "
+        if bol:
+            print(role)
+            content += ": " + gl_roles[role][0]['user']
+        content += "\n"
+    yield from send_message(message.channel, content)
 
 
 @asyncio.coroutine
 def add_role(message):
     global gl_roles
     arguments = message.content.split()
-    gl_roles[arguments[1]] = [{}]
+    gl_roles[arguments[1]] = [{"user": [{}]}]
     dump_array("roles.json", gl_roles)
     yield from send_message(message.channel, "Die Rolle \"" + arguments[1] + "\" wurde hinzugefügt")
 
