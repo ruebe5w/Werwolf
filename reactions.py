@@ -101,7 +101,7 @@ def roles(message, admin):
             bol = True
     content = "**Rollen im Spiel:**\n\n"
     for role in gl_roles:
-        content += "*" + role + "* "
+        content += "*" + str(gl_roles[role][0]["argument"]) + "x " + role + "* "
         if bol:
             content += ": "
             for user in gl_roles[role][0]['user']:
