@@ -81,6 +81,7 @@ def start(message):
     for role in gl_roles:
         for i2 in range(0, gl_roles[role][0]["argument"]):
             gl_roles[role][0]["user"].append(user_arr[i])
+            gl_users[user_arr[i]][0]["role"].append(role)
             i = i + 1
     dump_array('user.json', gl_users)
     dump_array('roles.json', gl_roles)
@@ -129,7 +130,7 @@ def register(user, channel, emoji):
             return
 
     gl_users[user.id] = [{"name": user.name, "discriminator": user.discriminator,
-                          "emoji": emoji, "mention": user.mention}]
+                          "emoji": emoji, "mention": user.mention, "role": []}]
 
     dump_array("user.json", gl_users)
     content = user.mention + " Du bist beim nächsten Spiel dabei!"
@@ -140,14 +141,17 @@ def register(user, channel, emoji):
 @asyncio.coroutine
 def new_poll(message):
     global gl_users
+    global gl_roles
     arguments = message.content.split()
     length = len(arguments[0]) + len(arguments[1]) + 1
-    content = message.content[length:]
+    content = "." + message.content[length:]
     if arguments[1].startswith('all'):
         for user in gl_users:
-            emoji = gl_users[user][0]["emoji"]
-            mention = gl_users[user][0]["mention"]
-            content = content + "\n" + emoji + " " + mention
+            bol_death = "Tot" in gl_users[user][0]['role']
+            if not bol_death:
+                emoji = gl_users[user][0]["emoji"]
+                mention = gl_users[user][0]["mention"]
+                content = content + "\n" + emoji + " " + mention
         yield from client.delete_message(message)
         recmess = yield from send_message(message.channel, content)
         for user in gl_users:
@@ -155,9 +159,12 @@ def new_poll(message):
             yield from add_reaction(recmess, emoji)
     else:
         for user in gl_roles[arguments[1]][0]['user']:
-            emoji = gl_users[user][0]["emoji"]
-            mention = gl_users[user][0]["mention"]
-            content = content + "\n" + emoji + " " + mention
+            bol_death = "Tot" in gl_users[user][0]['role']
+            bol_role = user in gl_roles[arguments[1]][0]['user']
+            if not bol_death and not bol_role:
+                emoji = gl_users[user][0]["emoji"]
+                mention = gl_users[user][0]["mention"]
+                content = content + "\n" + emoji + " " + mention
         yield from client.delete_message(message)
         recmess = yield from send_message(message.channel, content)
         for user in gl_roles[arguments[1]][0]['user']:
