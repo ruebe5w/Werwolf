@@ -167,9 +167,10 @@ def new_poll(message):
                 content = content + "\n" + emoji + " " + mention
         yield from client.delete_message(message)
         recmess = yield from send_message(message.channel, content)
-        for user in gl_roles[arguments[1]][0]['user']:
-            emoji = gl_users[user][0]["emoji"]
-            yield from add_reaction(recmess, emoji)
+        for user in gl_users:
+            if not bol_death and not bol_role:
+                emoji = gl_users[user][0]["emoji"]
+                yield from add_reaction(recmess, emoji)
 
 
 @asyncio.coroutine
