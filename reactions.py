@@ -31,6 +31,8 @@ def on_message(message):
             yield from add_role(message)
         if message.content.startswith('!poll'):
             yield from new_poll(message)
+    if message.content.startswith('!roles'):
+        yield from roles(message, False)
     if message.content.startswith('!reg'):
         contains_emoji = False
         for i in message.content:
