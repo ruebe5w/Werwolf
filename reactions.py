@@ -2,6 +2,7 @@ import discord
 import asyncio
 import json
 import random
+import emoji
 
 client = discord.Client()
 
@@ -33,10 +34,9 @@ def on_message(message):
     if message.content.startswith('!reg'):
         contains_emoji = False
         for i in message.content:
-            print(hex(ord(i)))
-            if 0x1F600 <= int(hex(ord(i)), 16) <= 0x1F64F:
+            if char_is_emoji(i):
                 contains_emoji = True
-                yield from add_reaction(message, i)
+                # yield from add_reaction(message, i)
                 yield from register(message.author, message.channel, i)
         if not contains_emoji:
             yield from send_message(message.channel,
@@ -63,6 +63,10 @@ def roles_load():
         print("Keine Rollendatenbank gefunden. Rollendatenbank wird erstellt.")
         with open("roles.json", "w") as file:
             gl_roles = {}
+
+
+def char_is_emoji(character):
+    return character in emoji.UNICODE_EMOJI
 
 
 @asyncio.coroutine
@@ -137,7 +141,7 @@ def register(user, channel, emoji):
 def new_poll(message):
     global gl_users
     arguments = message.content.split()
-    length = len(arguments[0]) + len(arguments[1])+1
+    length = len(arguments[0]) + len(arguments[1]) + 1
     content = message.content[length:]
     if arguments[1].startswith('all'):
         for user in gl_users:
