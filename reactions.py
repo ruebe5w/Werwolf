@@ -158,7 +158,7 @@ def new_poll(message):
             emoji = gl_users[user][0]["emoji"]
             yield from add_reaction(recmess, emoji)
     else:
-        for user in gl_roles[arguments[1]][0]['user']:
+        for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']
             bol_role = user in gl_roles[arguments[1]][0]['user']
             if not bol_death and not bol_role:
