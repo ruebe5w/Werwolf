@@ -170,6 +170,8 @@ def new_poll(message):
         yield from client.delete_message(message)
         recmess = yield from send_message(message.channel, content)
         for user in gl_users:
+            bol_death = "Tot" in gl_users[user][0]['role']
+            bol_role = user in gl_roles[arguments[1]][0]['user']
             if not bol_death and not bol_role:
                 emoji = gl_users[user][0]["emoji"]
                 yield from add_reaction(recmess, emoji)
