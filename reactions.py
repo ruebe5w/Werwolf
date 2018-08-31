@@ -31,6 +31,8 @@ def on_message(message):
             yield from add_role(message)
         if message.content.startswith('!poll'):
             yield from new_poll(message)
+        if message.content.startswith('!tot'):
+            yield from add_death(message)
     if message.content.startswith('!roles'):
         yield from roles(message, False)
     if message.content.startswith('!reg'):
@@ -90,6 +92,15 @@ def start(message):
     content = "Das Spiel wurde gestartet! Folgende Rollen sind im Spiel:\n"
     yield from send_message(message.channel, content)
     yield from roles(message, False)
+
+
+@asyncio.coroutine
+def add_death(message):
+    global gl_users
+    arguments = message.content.split()
+    gl_users[arguments[1]][0]["role"].append("Tot")
+    dump_array("user.json", gl_users)
+    yield from send_message(message.channel, gl_users[arguments[1]][0]["name"] + " ist nun tot.")
 
 
 @asyncio.coroutine
@@ -157,8 +168,10 @@ def new_poll(message):
         yield from client.delete_message(message)
         recmess = yield from send_message(message.channel, content)
         for user in gl_users:
-            emoji = gl_users[user][0]["emoji"]
-            yield from add_reaction(recmess, emoji)
+            bol_death = "Tot" in gl_users[user][0]['role']
+            if not bol_death:
+                emoji = gl_users[user][0]["emoji"]
+                yield from add_reaction(recmess, emoji)
     else:
         for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']
