@@ -40,6 +40,7 @@ def on_message(message):
             return
     if message.content.startswith('!roles'):
         yield from roles(message, False)
+        return
     if message.content.startswith('!reg'):
         contains_emoji = False
         for i in message.content:
@@ -50,7 +51,7 @@ def on_message(message):
         if not contains_emoji:
             yield from send_message(message.channel,
                                     message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
-        return
+            return
 
 
 def user_load():  # Load userdata
@@ -127,6 +128,9 @@ def roles(message, admin):
             for user in gl_roles[role][0]['user']:
                 content += gl_users[user][0]['name'] + " "
         content += "\n"
+    yield from send_message(message.channel, content)
+    print(1)
+    print(content)
 
 
 @asyncio.coroutine
