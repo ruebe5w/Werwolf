@@ -25,14 +25,19 @@ def on_message(message):
     if message.author.server_permissions.administrator:
         if message.content.startswith('!start'):
             yield from start(message)
+            return
         if message.content.startswith('!roles'):
             yield from roles(message, True)
+            return
         if message.content.startswith('!addrole'):
             yield from add_role(message)
+            return
         if message.content.startswith('!poll'):
             yield from new_poll(message)
+            return
         if message.content.startswith('!tot'):
             yield from add_death(message)
+            return
     if message.content.startswith('!roles'):
         yield from roles(message, False)
     if message.content.startswith('!reg'):
@@ -45,6 +50,7 @@ def on_message(message):
         if not contains_emoji:
             yield from send_message(message.channel,
                                     message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
+        return
 
 
 def user_load():  # Load userdata
@@ -116,11 +122,11 @@ def roles(message, admin):
     for role in gl_roles:
         content += "*" + str(gl_roles[role][0]["argument"]) + "x " + role + "* "
         if bol:
+
             content += ": "
             for user in gl_roles[role][0]['user']:
                 content += gl_users[user][0]['name'] + " "
         content += "\n"
-    yield from send_message(message.channel, content)
 
 
 @asyncio.coroutine
