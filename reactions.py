@@ -45,7 +45,7 @@ def on_message(message):
             if message.content.startswith('!clean'):
                 yield from clean_start(message)
                 return
-            if message.content.startswith("!new_game"):
+            if message.content.startswith("!newgame"):
                 yield from new_game(message)
         if message.content.startswith('!roles'):
             yield from roles(message, False)
