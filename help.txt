@@ -22,7 +22,7 @@ Zeigt diese Liste an.
 ------------------------------------------------------------------------------------
 ***Befehle fuer Admins:***
 
-**!new_game**
+**!newgame**
 Erstellt ein neues Spiel und loescht das vorherige.
 
 **!addrole [Rollenname] [Anzahl]**
