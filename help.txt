@@ -1,0 +1,52 @@
+***Befehle:***
+
+**!roles [-u]**
+Zeigt die Rollen im Spiel an.
+
+Argumente:
+-u (Nur Admins) Zeigt die Mitspieler zu den Rollen an.
+
+**!players**
+Zeigt die Mitspieler im Spiel an.
+
+**!reg [Emoji]**
+Befehl zum Regestrieren um Mitzuspielen
+
+Argumente:
+Emoji deiner Wahl
+
+**!help**
+Zeigt diese Liste an.
+
+
+------------------------------------------------------------------------------------
+***Befehle fuer Admins:***
+
+**!new_game**
+Erstellt ein neues Spiel und loescht das vorherige.
+
+**!addrole [Rollenname] [Anzahl]**
+Fuegt eine Rolle zum Spiel hinzu.
+
+Argumente:
+Rollenname (z.B. Werwolf)
+Anzahl - Anzahl, wie oft die Rolle vergeben werden soll
+
+**!start**
+Startet das Spiel, weißt Rollen zu
+
+**!clean**
+Loescht Rollenzuweisung, Rollen und Spieler bleiben bestehen
+
+**!poll [Rolle] [Abstimmungstext]**
+Erstellt eine Abstimmung
+
+Argumente:
+Rolle - all oder Rollenname(z.B. Werwolf)
+Abstimmungstext - Text, der ueber der Abstimmung angezeigt werden soll
+
+**!tot [Spieler-ID]**
+Fuegt einem Spieler die Rolle "Tot" hinzu
+
+Argumente: 
+Spieler-ID (Rechtsklick auf Discord-User, ID)

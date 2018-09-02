@@ -5,6 +5,8 @@ import random
 import emoji
 
 client = discord.Client()
+gl_roles = ""
+gl_users = ""
 
 
 @client.event
@@ -21,37 +23,50 @@ def on_ready():
 @client.event
 @asyncio.coroutine
 def on_message(message):
-    # print(message.content)
-    if message.author.server_permissions.administrator:
-        if message.content.startswith('!start'):
-            yield from start(message)
-            return
+    global gl_roles
+    global gl_users
+    if message.server is not None:
+        if message.author.server_permissions.administrator:
+            if message.content.startswith('!start'):
+                yield from start(message)
+                return
+            if message.content.startswith('!roles'):
+                yield from roles(message, True)
+                return
+            if message.content.startswith('!addrole'):
+                yield from add_role(message)
+                return
+            if message.content.startswith('!poll'):
+                yield from new_poll(message)
+                return
+            if message.content.startswith('!tot'):
+                yield from add_death(message)
+                return
+            if message.content.startswith('!clean'):
+                yield from clean_start(message)
+                return
+            if message.content.startswith("!new_game"):
+                yield from new_game(message)
         if message.content.startswith('!roles'):
-            yield from roles(message, True)
+            yield from roles(message, False)
             return
-        if message.content.startswith('!addrole'):
-            yield from add_role(message)
+        if message.content.startswith('!help'):
+            yield from show_help(message)
             return
-        if message.content.startswith('!poll'):
-            yield from new_poll(message)
+        if message.content.startswith('!players'):
+            yield from players(message)
             return
-        if message.content.startswith('!tot'):
-            yield from add_death(message)
-            return
-    if message.content.startswith('!roles'):
-        yield from roles(message, False)
-        return
-    if message.content.startswith('!reg'):
-        contains_emoji = False
-        for i in message.content:
-            if char_is_emoji(i):
-                contains_emoji = True
-                # yield from add_reaction(message, i)
-                yield from register(message.author, message.channel, i)
-        if not contains_emoji:
-            yield from send_message(message.channel,
-                                    message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
-            return
+        if message.content.startswith('!reg'):
+            contains_emoji = False
+            for i in message.content:
+                if char_is_emoji(i):
+                    contains_emoji = True
+                    # yield from add_reaction(message, i)
+                    yield from register(message.author, message.channel, i)
+            if not contains_emoji:
+                yield from send_message(message.channel,
+                                        message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
+                return
 
 
 def user_load():  # Load userdata
@@ -82,8 +97,8 @@ def char_is_emoji(character):
 
 @asyncio.coroutine
 def start(message):
-    global gl_users
     global gl_roles
+    global gl_users
     user_arr = []
     for user in gl_users:
         user_arr.append(user)
@@ -99,10 +114,58 @@ def start(message):
     content = "Das Spiel wurde gestartet! Folgende Rollen sind im Spiel:\n"
     yield from send_message(message.channel, content)
     yield from roles(message, False)
+    for user in gl_users:
+        content = "In der nächsten Runde \"Werwolf\" hast du die Rolle **" + gl_users[user][0]["role"][
+            0] + "**. Viel Spaß!"
+        print("user: " + user)
+        destination = discord.utils.get(message.server.members, id=user)
+        print("des: " + str(destination))
+        yield from send_message(destination, content)
+
+
+@asyncio.coroutine
+def show_help(message):
+    with open("help.txt", "r") as file:
+        text = file.read()
+        yield from send_message(message.channel, text)
+@asyncio.coroutine
+def new_game(message):
+    global gl_users
+    global gl_roles
+    gl_roles = {}
+    gl_users = {}
+    dump_array("roles.json", gl_roles)
+    dump_array("user.json", gl_users)
+    yield from send_message(message.channel,
+                            "Ein neues Spiel wurde gestartet. Ihr könnt euch jetzt mit !reg und einem Emoji eurer Wahl regestrieren! @here")
+
+
+@asyncio.coroutine
+def clean_start(message):
+    global gl_roles
+    global gl_users
+    for role in gl_roles:
+        gl_roles[role][0]["user"] = []
+    for user in gl_users:
+        gl_users[user][0]["role"] = []
+    dump_array("user.json", gl_users)
+    dump_array("roles.json", gl_roles)
+    yield from send_message(message.channel, "Start wurde aufgeräumt")
+
+
+@asyncio.coroutine
+def players(message):
+    global gl_roles
+    global gl_users
+    content = "**Es sind folgende Benutzer im Spiel:**\n"
+    for user in gl_users:
+        content += gl_users[user][0]["mention"] + gl_users[user][0]["emoji"] + "\n"
+    yield from send_message(message.channel, content)
 
 
 @asyncio.coroutine
 def add_death(message):
+    global gl_roles
     global gl_users
     arguments = message.content.split()
     gl_users[arguments[1]][0]["role"].append("Tot")
@@ -112,8 +175,8 @@ def add_death(message):
 
 @asyncio.coroutine
 def roles(message, admin):
-    global gl_users
     global gl_roles
+    global gl_users
     arguments = message.content.split()
     bol = False
     if len(arguments) > 1:
@@ -129,13 +192,12 @@ def roles(message, admin):
                 content += gl_users[user][0]['name'] + " "
         content += "\n"
     yield from send_message(message.channel, content)
-    print(1)
-    print(content)
 
 
 @asyncio.coroutine
 def add_role(message):
     global gl_roles
+    global gl_users
     arguments = message.content.split()
     gl_roles[arguments[1]] = [{"user": [], "argument": int(arguments[2])}]
     dump_array("roles.json", gl_roles)
@@ -144,6 +206,7 @@ def add_role(message):
 
 @asyncio.coroutine
 def register(user, channel, emoji):
+    global gl_roles
     global gl_users
     for cur_user in gl_users:  # Userdatenbank durchsuchen
         # print(user)
@@ -163,8 +226,8 @@ def register(user, channel, emoji):
 
 @asyncio.coroutine
 def new_poll(message):
-    global gl_users
     global gl_roles
+    global gl_users
     arguments = message.content.split()
     length = len(arguments[0]) + len(arguments[1]) + 1
     content = "." + message.content[length:]
