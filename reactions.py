@@ -42,8 +42,14 @@ def on_message(message):
             if message.content.startswith('!tot'):
                 yield from add_death(message)
                 return
-            if message.content.startswith('!clean'):
+            if message.content.startswith('!cleanstart'):
                 yield from clean_start(message)
+                return
+            if message.content.startswith('!cleanroles'):
+                yield from clean_roles(message)
+                return
+            if message.content.startswith('!cleanuser'):
+                yield from clean_user(message)
                 return
             if message.content.startswith("!newgame"):
                 yield from new_game(message)
@@ -128,6 +134,8 @@ def show_help(message):
     with open("help.txt", "r") as file:
         text = file.read()
         yield from send_message(message.channel, text)
+
+
 @asyncio.coroutine
 def new_game(message):
     global gl_users
@@ -151,6 +159,22 @@ def clean_start(message):
     dump_array("user.json", gl_users)
     dump_array("roles.json", gl_roles)
     yield from send_message(message.channel, "Start wurde aufgeräumt")
+
+
+@asyncio.coroutine
+def clean_roles(message):
+    global gl_roles
+    gl_roles = []
+    dump_array("roles.json", gl_roles)
+    yield from send_message(message.channel, "Rollen wurden gelöscht.")
+
+
+@asyncio.coroutine
+def clean_user(message):
+    global gl_users
+    gl_users = []
+    dump_array("user.json", gl_users)
+    yield from send_message(message.channel, "Spieler wurden gelöscht.")
 
 
 @asyncio.coroutine
