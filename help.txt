@@ -44,6 +44,9 @@ Loescht alle Rollen
 **!cleanuser**
 Loescht alle Spieler
 
+**!delrole [Rolle]**
+Loescht eine Rolle
+
 **!poll [Rolle] [Abstimmungstext]**
 Erstellt eine Abstimmung
 

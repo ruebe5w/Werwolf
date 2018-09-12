@@ -48,6 +48,9 @@ def on_message(message):
             if message.content.startswith('!cleanroles'):
                 yield from clean_roles(message)
                 return
+            if message.content.startswith('!delrole'):
+                yield from del_role(message)
+                return
             if message.content.startswith('!cleanuser'):
                 yield from clean_user(message)
                 return
@@ -164,7 +167,7 @@ def clean_start(message):
 @asyncio.coroutine
 def clean_roles(message):
     global gl_roles
-    gl_roles = []
+    gl_roles = {}
     dump_array("roles.json", gl_roles)
     yield from send_message(message.channel, "Rollen wurden gelöscht.")
 
@@ -172,11 +175,20 @@ def clean_roles(message):
 @asyncio.coroutine
 def clean_user(message):
     global gl_users
-    gl_users = []
+    gl_users = {}
     dump_array("user.json", gl_users)
     yield from send_message(message.channel, "Spieler wurden gelöscht.")
-
-
+@asyncio.coroutine
+def del_role(message):
+    global gl_roles
+    global gl_users
+    arguments = message.content.split()
+    if arguments[1] in gl_roles:
+        del gl_roles[arguments[1]]
+        dump_array('roles.json', gl_roles)
+        yield from send_message(message.channel, "Rolle "+arguments[1]+" wurde gelöscht.")
+    else:
+        yield from send_message(message.channel, "Die Rolle "+ arguments[1] + " ist nicht vorhanden.")
 @asyncio.coroutine
 def players(message):
     global gl_roles
