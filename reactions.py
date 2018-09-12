@@ -56,6 +56,9 @@ def on_message(message):
                 return
             if message.content.startswith("!newgame"):
                 yield from new_game(message)
+        if message.content.startswith('!ping'):
+            yield from send_message(message.channel, "Pong!")
+            return
         if message.content.startswith('!roles'):
             yield from roles(message, False)
             return
