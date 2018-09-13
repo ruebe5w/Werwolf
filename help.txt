@@ -34,7 +34,7 @@ Rollenname (z.B. Werwolf)
 Anzahl - Anzahl, wie oft die Rolle vergeben werden soll
 
 **!start**
-Startet das Spiel, weißt Rollen zu
+Startet das Spiel, weist Rollen zu
 
 **!cleanstart**
 Loescht Rollenzuweisung, Rollen und Spieler bleiben bestehen
