@@ -57,7 +57,7 @@ def on_message(message):
             if message.content.startswith("!newgame"):
                 yield from new_game(message)
         if message.content.startswith('!ping'):
-            yield from send_message(message.channel, "Pong!")
+            yield from add_reaction(message, '🏓')
             return
         if message.content.startswith('!roles'):
             yield from roles(message, False)
@@ -181,6 +181,8 @@ def clean_user(message):
     gl_users = {}
     dump_array("user.json", gl_users)
     yield from send_message(message.channel, "Spieler wurden gelöscht.")
+
+
 @asyncio.coroutine
 def del_role(message):
     global gl_roles
@@ -189,14 +191,16 @@ def del_role(message):
     if arguments[1] in gl_roles:
         del gl_roles[arguments[1]]
         dump_array('roles.json', gl_roles)
-        yield from send_message(message.channel, "Rolle "+arguments[1]+" wurde gelöscht.")
+        yield from send_message(message.channel, "Rolle " + arguments[1] + " wurde gelöscht.")
     else:
-        yield from send_message(message.channel, "Die Rolle "+ arguments[1] + " ist nicht vorhanden.")
+        yield from send_message(message.channel, "Die Rolle " + arguments[1] + " ist nicht vorhanden.")
+
+
 @asyncio.coroutine
 def players(message):
     global gl_roles
     global gl_users
-    content = "**Es sind folgende Benutzer im Spiel:**\n"
+    content = "**Es sind folgende Benutzer im Spiel:** (" + str(len(gl_users)) + ")\n"
     for user in gl_users:
         content += gl_users[user][0]["mention"] + gl_users[user][0]["emoji"] + "\n"
     yield from send_message(message.channel, content)
@@ -216,13 +220,16 @@ def add_death(message):
 def roles(message, admin):
     global gl_roles
     global gl_users
+    number_of_roles = 0
     arguments = message.content.split()
     bol = False
     if len(arguments) > 1:
         if admin and arguments[1] == '-u':
             bol = True
-    content = "**Rollen im Spiel:**\n\n"
+    content_title = "**Rollen im Spiel:** ("
+    content = ""
     for role in gl_roles:
+        number_of_roles += gl_roles[role][0]['argument']
         content += "*" + str(gl_roles[role][0]["argument"]) + "x " + role + "* "
         if bol:
 
@@ -230,6 +237,7 @@ def roles(message, admin):
             for user in gl_roles[role][0]['user']:
                 content += gl_users[user][0]['name'] + " "
         content += "\n"
+    content = content_title + str(number_of_roles) + ") \n\n" + content
     yield from send_message(message.channel, content)
 
 
