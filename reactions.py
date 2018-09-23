@@ -58,6 +58,9 @@ def on_message(message):
             if is_command('!deluser', ms):
                 yield from del_user(message)
                 return
+            if is_command('!forcesignup', ms):
+                yield from force_signup(ms)
+                return
             if message.content.startswith('!cleanuser'):
                 yield from clean_user(message)
                 return

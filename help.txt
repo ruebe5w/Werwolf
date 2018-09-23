@@ -51,6 +51,9 @@ Loescht eine Rolle
 **!deluser [User-ID]**
 Loescht einen Spieler
 
+**!forcesignup [User-ID] [Emoji]**
+Gewaltsames Anmelden :D
+
 **!autr [User-ID] [Rollenname]**
 "Add user to role"
 Fügt Benutzer einer Rolle hinzu (Nötig bei Weißer Werwolf)
