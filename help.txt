@@ -48,6 +48,13 @@ Loescht alle Spieler
 **!delrole [Rolle]**
 Loescht eine Rolle
 
+**!deluser [User-ID]**
+Loescht einen Spieler
+
+**!autr [User-ID] [Rollenname]**
+"Add user to role"
+Fügt Benutzer einer Rolle hinzu (Nötig bei Weißer Werwolf)
+
 **!poll [Rolle] [Abstimmungstext]**
 Erstellt eine Abstimmung
 

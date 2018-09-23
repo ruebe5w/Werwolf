@@ -23,6 +23,7 @@ def on_ready():
 @client.event
 @asyncio.coroutine
 def on_message(message):
+    ms = message
     global gl_roles
     global gl_users
     if message.server is not None:
@@ -50,6 +51,12 @@ def on_message(message):
                 return
             if message.content.startswith('!delrole'):
                 yield from del_role(message)
+                return
+            if message.content.startswith('!autr'):
+                yield from add_user_to_role(message)
+                return
+            if is_command('!deluser', ms):
+                yield from del_user(message)
                 return
             if message.content.startswith('!cleanuser'):
                 yield from clean_user(message)
@@ -101,6 +108,13 @@ def roles_load():
         print("Keine Rollendatenbank gefunden. Rollendatenbank wird erstellt.")
         with open("roles.json", "w") as file:
             gl_roles = {}
+
+
+def is_command(command, message):
+    if message.content.startswith(command):
+        return True
+    else:
+        return False
 
 
 def char_is_emoji(character):
@@ -197,6 +211,29 @@ def del_role(message):
 
 
 @asyncio.coroutine
+def del_user(ms):
+    global gl_roles
+    global gl_users
+    arguments = ms.content.split()
+    if arguments[1] in gl_users:
+        del gl_users[arguments[1]]
+        for role in gl_roles:
+            del gl_roles[role][0]["user"][arguments[1]]
+        dump_array('roles.json', gl_roles)
+        dump_array('user.json', gl_users)
+        yield from send_message(ms.channel, "Der User " + arguments[1] + " wurde gelöscht.")
+    else:
+        yield from send_message(ms.channel, "Der User " + arguments[1] + " ist nicht vorhanden.")
+
+
+@asyncio.coroutine
+def force_signup(ms):
+    arguments = ms.content.split()
+    user_obj = destination = discord.utils.get(ms.server.members, id=arguments[1])
+    yield from register(user_obj, ms.channel, arguments[2])
+
+
+@asyncio.coroutine
 def players(message):
     global gl_roles
     global gl_users
@@ -249,6 +286,21 @@ def add_role(message):
     gl_roles[arguments[1]] = [{"user": [], "argument": int(arguments[2])}]
     dump_array("roles.json", gl_roles)
     yield from send_message(message.channel, "Die Rolle \"" + arguments[1] + "\" wurde hinzugefügt")
+
+
+@asyncio.coroutine
+def add_user_to_role(message):
+    global gl_roles
+    global gl_users
+    arguments = message.content.split()
+    user = arguments[1]
+    role = arguments[2]
+    if user in gl_users and role in gl_roles:
+        gl_users[user][0]["role"].append(role)
+        gl_roles[role][0]["user"].append(user)
+        yield from send_message(message.channel, "User wurde erfolgreich zu " + role + " hinzugefügt.")
+    else:
+        yield from send_message(message.channel, "Ein Fehler ist aufgetreten.")
 
 
 @asyncio.coroutine
