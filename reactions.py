@@ -332,7 +332,7 @@ def new_poll(message):
     global gl_users
     arguments = message.content.split()
     length = len(arguments[0]) + len(arguments[1]) + 1
-    content = "." + message.content[length:]
+    content = "." + message.content[length:]+" @everyone"
     if arguments[1].startswith('all'):
         for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']

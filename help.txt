@@ -59,7 +59,7 @@ Gewaltsames Anmelden :D
 Fügt Benutzer einer Rolle hinzu (Nötig bei Weißer Werwolf)
 
 **!poll [Rolle] [Abstimmungstext]**
-Erstellt eine Abstimmung
+Erstellt eine Abstimmung, eine Mention an alle wird automatisch angehängt.
 
 Argumente:
 Rolle - all oder Rollenname(z.B. Werwolf)
