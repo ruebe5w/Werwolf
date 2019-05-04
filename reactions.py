@@ -1,7 +1,9 @@
-import discord
 import asyncio
 import json
 import random
+import sys
+
+import discord
 import emoji
 
 client = discord.Client()
@@ -380,6 +382,9 @@ def dump_array(file, array):
     with open(file, "w") as file:
         file.write(json.dumps(array))
 
+
+log = open("Werwolf.log", "a")
+sys.stdout = log
 
 with open("BotToken.txt", "r") as file:
     token = file.read()
