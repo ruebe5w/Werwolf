@@ -2,95 +2,25 @@ import asyncio
 import json
 import random
 import sys
+import time
 
+from discord.ext import commands
 import discord
 import emoji
 
-client = discord.Client()
+prefix = "!"
+bot = commands.Bot(command_prefix=prefix)
 gl_roles = ""
 gl_users = ""
+user_object_force = ""
 
 
-@client.event
-@asyncio.coroutine
-def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('------')
+@bot.event
+async def on_ready():
+    print("Everything's all ready to go~")  #
+    print(time.strftime("%d.%m.%Y %H:%M"))
     user_load()
     roles_load()
-
-
-@client.event
-@asyncio.coroutine
-def on_message(message):
-    ms = message
-    global gl_roles
-    global gl_users
-    if message.server is not None:
-        if message.author.server_permissions.administrator:
-            if message.content.startswith('!start'):
-                yield from start(message)
-                return
-            if message.content.startswith('!roles'):
-                yield from roles(message, True)
-                return
-            if message.content.startswith('!addrole'):
-                yield from add_role(message)
-                return
-            if message.content.startswith('!poll'):
-                yield from new_poll(message)
-                return
-            if message.content.startswith('!tot'):
-                yield from add_death(message)
-                return
-            if message.content.startswith('!cleanstart'):
-                yield from clean_start(message)
-                return
-            if message.content.startswith('!cleanroles'):
-                yield from clean_roles(message)
-                return
-            if message.content.startswith('!delrole'):
-                yield from del_role(message)
-                return
-            if message.content.startswith('!autr'):
-                yield from add_user_to_role(message)
-                return
-            if is_command('!deluser', ms):
-                yield from del_user(message)
-                return
-            if is_command('!forcesignup', ms):
-                yield from force_signup(ms)
-                return
-            if message.content.startswith('!cleanuser'):
-                yield from clean_user(message)
-                return
-            if message.content.startswith("!newgame"):
-                yield from new_game(message)
-        if message.content.startswith('!ping'):
-            yield from add_reaction(message, '🏓')
-            return
-        if message.content.startswith('!roles'):
-            yield from roles(message, False)
-            return
-        if message.content.startswith('!help'):
-            yield from show_help(message)
-            return
-        if message.content.startswith('!players'):
-            yield from players(message)
-            return
-        if message.content.startswith('!reg'):
-            contains_emoji = False
-            for i in message.content:
-                if char_is_emoji(i):
-                    contains_emoji = True
-                    # yield from add_reaction(message, i)
-                    yield from register(message.author, message.channel, i)
-            if not contains_emoji:
-                yield from send_message(message.channel,
-                                        message.author.mention + " Deine Nachricht enthält kein gültiges Emoji!")
-                return
 
 
 def user_load():  # Load userdata
@@ -115,66 +45,81 @@ def roles_load():
             gl_roles = {}
 
 
-def is_command(command, message):
-    if message.content.startswith(command):
-        return True
-    else:
-        return False
-
-
 def char_is_emoji(character):
     return character in emoji.UNICODE_EMOJI
 
 
-@asyncio.coroutine
-def start(message):
+@bot.command()
+async def ping(ctx):
+    '''
+    This text will be shown in the help command
+    '''
+
+    # Get the latency of the bot
+    latency = bot.latency  # Included in the Discord.py library
+    # Send it to the user
+    await ctx.send(latency)
+
+
+@bot.command()
+@commands.has_role("Spielleiter")
+async def start(ctx):
+    """Startet das Spiel, weist Rollen zu"""
+    message = ctx.message
     global gl_roles
     global gl_users
     user_arr = []
-    for user in gl_users:
-        user_arr.append(user)
+    for user_id in gl_users:
+        user_arr.append(user_id)
     random.shuffle(user_arr)
     i = 0
     for role in gl_roles:
         for i2 in range(0, gl_roles[role][0]["argument"]):
-            gl_roles[role][0]["user"].append(user_arr[i])
+            gl_roles[role][0]["user"].append(str(user_arr[i]))
             gl_users[user_arr[i]][0]["role"].append(role)
             i = i + 1
     dump_array('user.json', gl_users)
     dump_array('roles.json', gl_roles)
     content = "Das Spiel wurde gestartet! Folgende Rollen sind im Spiel:\n"
-    yield from send_message(message.channel, content)
-    yield from roles(message, False)
-    for user in gl_users:
-        content = "In der nächsten Runde \"Werwolf\" hast du die Rolle **" + gl_users[user][0]["role"][
+    await send_message(message.channel, content)
+    await ctx.send(collect_roles(False))
+    for user_id in gl_users:
+        content = "In der nächsten Runde \"Werwolf\" hast du die Rolle **" + gl_users[user_id][0]["role"][
             0] + "**. Viel Spaß!"
-        print("user: " + user)
-        destination = discord.utils.get(message.server.members, id=user)
-        print("des: " + str(destination))
-        yield from send_message(destination, content)
+        member = ctx.guild.get_member(int(user_id))
+        await send_message(member.dm_channel, content)
 
 
+"""
 @asyncio.coroutine
 def show_help(message):
     with open("help.txt", "r") as file:
         text = file.read()
-        yield from send_message(message.channel, text)
+        await send_message(message.channel, text)
+"""
 
 
-@asyncio.coroutine
-def new_game(message):
+@bot.command(aliases=["newgame", "new"])
+@commands.has_role("Spielleiter")
+async def new_game(ctx):
+    """Erstellt ein neues Spiel und loescht das vorherige."""
+    message = ctx.message
     global gl_users
     global gl_roles
     gl_roles = {}
     gl_users = {}
     dump_array("roles.json", gl_roles)
     dump_array("user.json", gl_users)
-    yield from send_message(message.channel,
-                            "Ein neues Spiel wurde gestartet. Ihr könnt euch jetzt mit !reg und einem Emoji eurer Wahl regestrieren! @here")
+    await send_message(message.channel,
+                       "Ein neues Spiel wurde gestartet. "
+                       "Ihr könnt euch jetzt mit !reg und einem Emoji eurer Wahl regestrieren! @here")
 
 
-@asyncio.coroutine
-def clean_start(message):
+@bot.command(aliases=["cleanstart"])
+@commands.has_role("Spielleiter")
+async def clean_start(ctx):
+    """Loescht Rollenzuweisung, Rollen und Spieler bleiben bestehen"""
+    message = ctx.message
     global gl_roles
     global gl_users
     for role in gl_roles:
@@ -183,140 +128,194 @@ def clean_start(message):
         gl_users[user][0]["role"] = []
     dump_array("user.json", gl_users)
     dump_array("roles.json", gl_roles)
-    yield from send_message(message.channel, "Start wurde aufgeräumt")
+    await send_message(message.channel, "Start wurde aufgeräumt")
 
 
-@asyncio.coroutine
-def clean_roles(message):
+@bot.command()
+@commands.has_role("Spielleiter")
+async def clean_roles(ctx):
+    """Loescht alle Rollen"""
+    message = ctx.message
     global gl_roles
     gl_roles = {}
     dump_array("roles.json", gl_roles)
-    yield from send_message(message.channel, "Rollen wurden gelöscht.")
+    await send_message(message.channel, "Rollen wurden gelöscht.")
 
 
-@asyncio.coroutine
-def clean_user(message):
+@bot.command()
+@commands.has_role("Spielleiter")
+async def clean_users(ctx):
+    """Loescht alle Spieler"""
+    message = ctx.message
     global gl_users
     gl_users = {}
     dump_array("user.json", gl_users)
-    yield from send_message(message.channel, "Spieler wurden gelöscht.")
+    await send_message(message.channel, "Spieler wurden gelöscht.")
 
 
-@asyncio.coroutine
-def del_role(message):
+@bot.command()
+@commands.has_role("Spielleiter")
+async def del_roles(ctx, rolle):
+    """Loescht eine Rolle"""
+    message = ctx.message
     global gl_roles
     global gl_users
-    arguments = message.content.split()
-    if arguments[1] in gl_roles:
-        del gl_roles[arguments[1]]
+
+    if rolle in gl_roles:
+        del gl_roles[rolle]
         dump_array('roles.json', gl_roles)
-        yield from send_message(message.channel, "Rolle " + arguments[1] + " wurde gelöscht.")
+        await send_message(message.channel, "Rolle " + rolle + " wurde gelöscht.")
     else:
-        yield from send_message(message.channel, "Die Rolle " + arguments[1] + " ist nicht vorhanden.")
+        await send_message(message.channel, "Die Rolle " + rolle + " ist nicht vorhanden.")
 
 
-@asyncio.coroutine
-def del_user(ms):
+@bot.command()
+@commands.has_role("Spielleiter")
+async def del_user(ctx, user_id):
+    """Loescht einen Spieler"""
+    ms = ctx.message
     global gl_roles
     global gl_users
-    arguments = ms.content.split()
-    if arguments[1] in gl_users:
-        del gl_users[arguments[1]]
+
+    if user_id in gl_users:
+        del gl_users[user_id]
         for role in gl_roles:
-            del gl_roles[role][0]["user"][arguments[1]]
+            del gl_roles[role][0]["user"][user_id]
         dump_array('roles.json', gl_roles)
         dump_array('user.json', gl_users)
-        yield from send_message(ms.channel, "Der User " + arguments[1] + " wurde gelöscht.")
+        await send_message(ms.channel, "Der User " + user_id + " wurde gelöscht.")
     else:
-        yield from send_message(ms.channel, "Der User " + arguments[1] + " ist nicht vorhanden.")
+        await send_message(ms.channel, "Der User " + user_id + " ist nicht vorhanden.")
 
 
-@asyncio.coroutine
-def force_signup(ms):
-    arguments = ms.content.split()
-    user_obj = destination = discord.utils.get(ms.server.members, id=arguments[1])
-    yield from register(user_obj, ms.channel, arguments[2])
+@bot.command()
+@commands.has_role("Spielleiter")
+async def force_signup(ctx, user_id, emoji):
+    """Gewaltsames Anmelden :D"""
+    global user_object_force
+    ms = ctx.message
+    user_object_force = discord.utils.get(ms.server.members, id=user_id)
+    await register(ctx, emoji)
 
 
-@asyncio.coroutine
-def players(message):
+@bot.command()
+@commands.has_role("Spielleiter")
+async def players(ctx):
+    """Zeigt die Mitspieler im Spiel an."""
+    message = ctx.message
     global gl_roles
     global gl_users
     content = "**Es sind folgende Benutzer im Spiel:** (" + str(len(gl_users)) + ")\n"
     for user in gl_users:
         content += gl_users[user][0]["mention"] + gl_users[user][0]["emoji"] + "\n"
-    yield from send_message(message.channel, content)
+    await send_message(message.channel, content)
 
 
-@asyncio.coroutine
-def add_death(message):
+@bot.command(aliases=["adddeath", "death"])
+@commands.has_role("Spielleiter")
+async def add_death(ctx, user_id):
+    """Fuegt einem Spieler die Rolle "Tot" hinzu
+    Spieler-ID: Rechtsklick auf Discord-User, ID"""
+    message = ctx.message
     global gl_roles
     global gl_users
-    arguments = message.content.split()
-    gl_users[arguments[1]][0]["role"].append("Tot")
+    gl_users[user_id][0]["role"].append("Tot")
     dump_array("user.json", gl_users)
-    yield from send_message(message.channel, gl_users[arguments[1]][0]["name"] + " ist nun tot.")
+    await send_message(message.channel, gl_users[user_id][0]["name"] + " ist nun tot.")
 
 
-@asyncio.coroutine
-def roles(message, admin):
-    global gl_roles
-    global gl_users
+def is_gamemaster(member):
+    for role in member.roles:
+        if role.name == "Spielleiter" or role.name == "Gamemaster":
+            return True
+        else:
+            return False
+
+
+def collect_roles(bolGamemaster):
     number_of_roles = 0
-    arguments = message.content.split()
-    bol = False
-    if len(arguments) > 1:
-        if admin and arguments[1] == '-u':
-            bol = True
     content_title = "**Rollen im Spiel:** ("
     content = ""
     for role in gl_roles:
         number_of_roles += gl_roles[role][0]['argument']
         content += "*" + str(gl_roles[role][0]["argument"]) + "x " + role + "* "
-        if bol:
+        if bolGamemaster:
 
             content += ": "
             for user in gl_roles[role][0]['user']:
                 content += gl_users[user][0]['name'] + " "
         content += "\n"
     content = content_title + str(number_of_roles) + ") \n\n" + content
-    yield from send_message(message.channel, content)
+    return content
 
 
-@asyncio.coroutine
-def add_role(message):
+@bot.command(aliases=["roles", "showroles"])
+async def show_roles(ctx, *args):
+    """Zeigt die Rollen im Spiel an.
+    Für Spielleiter: zum Anzeigen von Mitspielern zu den Rollen irgendeinen weiteren
+    Buchstaben als Argument hinzufügen, z.B. \"!roles a\""""
+    message = ctx.message
     global gl_roles
     global gl_users
-    arguments = message.content.split()
-    gl_roles[arguments[1]] = [{"user": [], "argument": int(arguments[2])}]
+
+    bol = False
+    if is_gamemaster(ctx.author) and len(args) > 0:
+        bol = True
+    content = collect_roles(bol)
+    await send_message(message.channel, content)
+
+
+@bot.command(aliases=["addrole", "addr"])
+@commands.has_role("Spielleiter")
+async def add_role(ctx, rolle, count):
+    """Fuegt eine Rolle zum Spiel hinzu.
+    Rollenname (z.B. Werwolf)
+    Anzahl - Anzahl, wie oft die Rolle vergeben werden soll"""
+    message = ctx.message
+    global gl_roles
+    global gl_users
+    gl_roles[rolle] = [{"user": [], "argument": int(count)}]
     dump_array("roles.json", gl_roles)
-    yield from send_message(message.channel, "Die Rolle \"" + arguments[1] + "\" wurde hinzugefügt")
+    await send_message(message.channel, "Die Rolle \"" + rolle + "\" wurde hinzugefügt")
 
 
-@asyncio.coroutine
-def add_user_to_role(message):
+@bot.command(aliases=["autr"])
+@commands.has_role("Spielleiter")
+async def add_user_to_role(ctx, user, role):
+    """Fügt Benutzer einer Rolle hinzu (Nötig bei Weißer Werwolf!)"""
+    message = ctx.message
     global gl_roles
     global gl_users
-    arguments = message.content.split()
-    user = arguments[1]
-    role = arguments[2]
     if user in gl_users and role in gl_roles:
         gl_users[user][0]["role"].append(role)
         gl_roles[role][0]["user"].append(user)
-        yield from send_message(message.channel, "User wurde erfolgreich zu " + role + " hinzugefügt.")
+        await send_message(message.channel, "User wurde erfolgreich zu " + role + " hinzugefügt.")
     else:
-        yield from send_message(message.channel, "Ein Fehler ist aufgetreten.")
+        await send_message(message.channel, "Ein Fehler ist aufgetreten.")
 
 
-@asyncio.coroutine
-def register(user, channel, emoji):
+@bot.command(aliases=["reg"])
+async def register(ctx, emoji, *args):
+    """Befehl zum Registrieren um mitzuspielen
+    Emoji: Emoji deiner Wahl, mit dem du in Abstimmungen erscheinen möchtest."""
+    global user_object_force
+    if user_object_force != "":
+        user = user_object_force
+        user_object_force = ""
+    else:
+        user = ctx.author
+    channel = ctx.channel
     global gl_roles
     global gl_users
+    if not char_is_emoji(emoji):
+        await send_message(channel,
+                           user.mention + " Deine Nachricht enthält kein gültiges Emoji!")
+        return
     for cur_user in gl_users:  # Userdatenbank durchsuchen
         # print(user)
         if user.id == cur_user:
             content = user.mention + " Du bist schon dabei!"
-            yield from send_message(channel, content)
+            await send_message(channel, content)
             return
 
     gl_users[user.id] = [{"name": user.name, "discriminator": user.discriminator,
@@ -324,58 +323,62 @@ def register(user, channel, emoji):
 
     dump_array("user.json", gl_users)
     content = user.mention + " Du bist beim nächsten Spiel dabei!"
-    reacmess = yield from send_message(channel, content)
-    yield from add_reaction(reacmess, emoji)
+    reacmess = await send_message(channel, content)
+    await add_reaction(reacmess, emoji)
 
 
-@asyncio.coroutine
-def new_poll(message):
+@bot.command(aliases=["poll", "newpoll"])
+@commands.has_role("Spielleiter")
+async def new_poll(ctx, rolle, *, text: str):
+    """Erstellt eine Abstimmung.
+    Eine Mention an alle wird automatisch angehängt.
+    Rolle - all oder Rollenname(z.B. Werwolf)
+Abstimmungstext - Text, der ueber der Abstimmung angezeigt werden soll"""
+    message = ctx.message
     global gl_roles
     global gl_users
-    arguments = message.content.split()
-    length = len(arguments[0]) + len(arguments[1]) + 1
-    content = "." + message.content[length:]+" @everyone"
-    if arguments[1].startswith('all'):
+
+    text = text + " @everyone"
+    if rolle == "all" or rolle == "alle":
         for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']
             if not bol_death:
                 emoji = gl_users[user][0]["emoji"]
                 mention = gl_users[user][0]["mention"]
-                content = content + "\n" + emoji + " " + mention
-        yield from client.delete_message(message)
-        recmess = yield from send_message(message.channel, content)
+                text = text + "\n" + emoji + " " + mention
+        await message.delete()
+        recmess = await send_message(ctx.channel, text)
         for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']
             if not bol_death:
                 emoji = gl_users[user][0]["emoji"]
-                yield from add_reaction(recmess, emoji)
+                await add_reaction(recmess, emoji)
     else:
         for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']
-            bol_role = user in gl_roles[arguments[1]][0]['user']
+            bol_role = user in gl_roles[rolle][0]['user']
             if not bol_death and not bol_role:
                 emoji = gl_users[user][0]["emoji"]
                 mention = gl_users[user][0]["mention"]
-                content = content + "\n" + emoji + " " + mention
-        yield from client.delete_message(message)
-        recmess = yield from send_message(message.channel, content)
+                text = text + "\n" + emoji + " " + mention
+        await message.delete()
+        recmess = await send_message(message.channel, text)
         for user in gl_users:
             bol_death = "Tot" in gl_users[user][0]['role']
-            bol_role = user in gl_roles[arguments[1]][0]['user']
+            bol_role = user in gl_roles[rolle][0]['user']
             if not bol_death and not bol_role:
                 emoji = gl_users[user][0]["emoji"]
-                yield from add_reaction(recmess, emoji)
+                await add_reaction(recmess, emoji)
 
 
-@asyncio.coroutine
-def send_message(receiver, content):
-    message = yield from client.send_message(receiver, content)
+async def send_message(receiver, content):
+    message = await receiver.send(content)
     return message
 
 
 @asyncio.coroutine
-def add_reaction(message, emoji):
-    yield from client.add_reaction(message, emoji)
+async def add_reaction(message, emoji):
+    await message.add_reaction(emoji)
 
 
 def dump_array(file, array):
@@ -388,4 +391,4 @@ sys.stdout = log
 
 with open("BotToken.txt", "r") as file:
     token = file.read()
-client.run(token)
+bot.run(token)
