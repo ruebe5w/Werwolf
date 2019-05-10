@@ -13,6 +13,7 @@ bot = commands.Bot(command_prefix=prefix)
 gl_roles = ""
 gl_users = ""
 user_object_force = ""
+gamemaster_role_name = "Spielmaster"
 
 
 @bot.event
@@ -62,7 +63,7 @@ async def ping(ctx):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def start(ctx):
     """Startet das Spiel, weist Rollen zu"""
     message = ctx.message
@@ -100,7 +101,7 @@ def show_help(message):
 
 
 @bot.command(aliases=["newgame", "new"])
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def new_game(ctx):
     """Erstellt ein neues Spiel und loescht das vorherige."""
     message = ctx.message
@@ -116,7 +117,7 @@ async def new_game(ctx):
 
 
 @bot.command(aliases=["cleanstart"])
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def clean_start(ctx):
     """Loescht Rollenzuweisung, Rollen und Spieler bleiben bestehen"""
     message = ctx.message
@@ -132,7 +133,7 @@ async def clean_start(ctx):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def clean_roles(ctx):
     """Loescht alle Rollen"""
     message = ctx.message
@@ -143,7 +144,7 @@ async def clean_roles(ctx):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def clean_users(ctx):
     """Loescht alle Spieler"""
     message = ctx.message
@@ -154,7 +155,7 @@ async def clean_users(ctx):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def del_roles(ctx, rolle):
     """Loescht eine Rolle"""
     message = ctx.message
@@ -170,7 +171,7 @@ async def del_roles(ctx, rolle):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def del_user(ctx, user_id):
     """Loescht einen Spieler"""
     ms = ctx.message
@@ -189,7 +190,7 @@ async def del_user(ctx, user_id):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def force_signup(ctx, user_id, emoji):
     """Gewaltsames Anmelden :D"""
     global user_object_force
@@ -199,7 +200,7 @@ async def force_signup(ctx, user_id, emoji):
 
 
 @bot.command()
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def players(ctx):
     """Zeigt die Mitspieler im Spiel an."""
     message = ctx.message
@@ -212,7 +213,7 @@ async def players(ctx):
 
 
 @bot.command(aliases=["adddeath", "death"])
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def add_death(ctx, user_id):
     """Fuegt einem Spieler die Rolle "Tot" hinzu
     Spieler-ID: Rechtsklick auf Discord-User, ID"""
@@ -226,7 +227,7 @@ async def add_death(ctx, user_id):
 
 def is_gamemaster(member):
     for role in member.roles:
-        if role.name == "Spielleiter" or role.name == "Gamemaster":
+        if role.name == gamemaster_role_name:
             return True
         else:
             return False
@@ -266,7 +267,7 @@ async def show_roles(ctx, *args):
 
 
 @bot.command(aliases=["addrole", "addr"])
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def add_role(ctx, rolle, count):
     """Fuegt eine Rolle zum Spiel hinzu.
     Rollenname (z.B. Werwolf)
@@ -280,7 +281,7 @@ async def add_role(ctx, rolle, count):
 
 
 @bot.command(aliases=["autr"])
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def add_user_to_role(ctx, user, role):
     """Fügt Benutzer einer Rolle hinzu (Nötig bei Weißer Werwolf!)"""
     message = ctx.message
@@ -328,7 +329,7 @@ async def register(ctx, emoji, *args):
 
 
 @bot.command(aliases=["poll", "newpoll"])
-@commands.has_role("Spielleiter")
+@commands.has_role(gamemaster_role_name)
 async def new_poll(ctx, rolle, *, text: str):
     """Erstellt eine Abstimmung.
     Eine Mention an alle wird automatisch angehängt.
