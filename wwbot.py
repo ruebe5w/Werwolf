@@ -234,6 +234,8 @@ def is_gamemaster(member):
 
 
 def collect_roles(bolGamemaster):
+    global gl_roles
+    global gl_users
     number_of_roles = 0
     content_title = "**Rollen im Spiel:** ("
     content = ""
@@ -251,19 +253,18 @@ def collect_roles(bolGamemaster):
 
 
 @bot.command(aliases=["roles", "showroles"])
-async def show_roles(ctx, *args):
+async def show_roles(ctx):
     """Zeigt die Rollen im Spiel an.
-    Für Spielleiter: zum Anzeigen von Mitspielern zu den Rollen irgendeinen weiteren
-    Buchstaben als Argument hinzufügen, z.B. \"!roles a\""""
-    message = ctx.message
-    global gl_roles
-    global gl_users
+    """
+    content = collect_roles(False)
+    await send_message(ctx.channel, content)
 
-    bol = False
-    if is_gamemaster(ctx.author) and len(args) > 0:
-        bol = True
-    content = collect_roles(bol)
-    await send_message(message.channel, content)
+@show_roles.commands(aliases=["ass", "a"])
+@commands.has_role(gamemaster_role_name)
+async def assignment(ctx):
+    """Zeigt die Rollen und zugehörige Spieler an."""
+    content = collect_roles(True)
+    await send_message(ctx.channel, content)
 
 
 @bot.command(aliases=["addrole", "addr"])
